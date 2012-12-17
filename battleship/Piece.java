@@ -1,29 +1,29 @@
-package loa;
+package battleship;
 
-import static loa.Side.*;
+import static battleship.Marker.*;
 
 /** A Piece denotes the contents of a square.
  *  @author Andrew Fang */
 enum Piece {
     /** The names of the pieces.  EMP indicates an empty square. */
-    BP(BLACK, "b"), WP(WHITE, "w"),  EMP(null, "-");
+    H(HIT, "x"), M(MISS, "-"),  EMP(null, "?");
 
-    /** The side this piece belongs to. */
-    private Side _side;
+    /** The category this piece belongs to. */
+    private Marker _marker;
     /** The textual representation of this piece. */
     private String _textName;
 
-    /** A Piece on the given SIDE that uses TEXTNAME as its printed
+    /** A Piece with the given MARKER that uses TEXTNAME as its printed
      *  contents. */
-    Piece(Side side, String textName) {
-        _side = side;
+    Piece(Marker marker, String textName) {
+        _marker = marker;
         _textName = textName;
     }
 
-    /** Returns which side (BLACK or WHITE) plays this piece, or null
+    /** Returns the marker specfication, or null
      *  for an empty square. */
-    Side side() { return _side; }
-    /** Returns the one-character denotation of this piece on the standard
-     *  text display of a checkerboard. */
+    Marker marker() { return _marker; }
+
+    /** Returns the one-character denotation of this piece on the board. */
     String textName() { return _textName; }
 }

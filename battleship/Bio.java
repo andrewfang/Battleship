@@ -1,4 +1,4 @@
-package loa;
+package battleship;
 
 /** Indicates the biology for a player.
  *  @author Andrew Fang */

@@ -1,6 +1,7 @@
-package loa;
+package battleship;
 
-import static loa.Side.*;
+import static battleship.Side.*;
+import static battleship.Ship.*;
 import java.util.Scanner;
 import ucb.util.Stopwatch;
 
@@ -15,6 +16,7 @@ public abstract class Player {
         _game = game;
         _stopwatch = new Stopwatch();
         _stopwatchOn = false;
+	_ships
     }
 
     /** Makes a decision about what to do using INP.

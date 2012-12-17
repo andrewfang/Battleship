@@ -3,11 +3,10 @@ package battleship;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import static loa.Piece.*;
-import static loa.Side.*;
+import static battleship.Piece.*;
+import static battleship.Side.*;
 
-/** Represents the state of a game of Lines of Action. A Board is immutable.
- *  Its MutableBoard subclass allows moves to be made.
+/** Represents the state of a board in battleship.
  *  @author Andrew Fang
  */
 class Board {
@@ -16,14 +15,13 @@ class Board {
      *  INITIALCONTENTS and in which it is PLAYER's move. The resulting
      *  Board has
      *        get(col, row) == INITIALCONTENTS[row-1][col-1]
-     *  Assumes that PLAYER is not null and INITIALCONTENTS is 8x8.
+     *  Assumes that PLAYER is not null and INITIALCONTENTS is NxN.
      */
-    Board(Piece[][] initialContents, Side player) {
-        assert player != null && initialContents.length == 8;
+    Board(Piece[][] initialContents, Side player, int n) {
+        assert player != null && initialContents.length == n;
         _whoseTurn = player;
         _movesMade = 0;
-        _moves = new LinkedList<Move>();
-        _atePiece = new LinkedList<Boolean>();
+	_size = n;
         int index = 0;
         for (Piece[] x : initialContents) {
             System.arraycopy(x, 0, _config[index], 0, 8);
@@ -33,44 +31,31 @@ class Board {
 
     /** A new board in the standard initial position. */
     Board() {
-        this(INITIAL_PIECES, BLACK);
+        this(BLANK, PLAYER1, 10);
     }
 
-    /** A Board whose initial contents and state are copied from
-     *  BOARD. */
-    Board(Board board) {
-        _whoseTurn = board.turn().opponent();
-        _movesMade = board.movesMade();
-        Piece[][] oldconfig = board.getConfig();
-        int index = 0;
-        for (Piece[] x : oldconfig) {
-            System.arraycopy(x, 0, _config[index], 0, 8);
-            index++;
-        }
-    }
-
-    /** Return the contents of column C, row R, where 1 <= C,R <= 8,
+    /** Return the contents of column C, row R, where 1 <= C,R <= _size,
      *  where column 1 corresponds to column 'a' in the standard
      *  notation. */
     Piece get(int c, int r) {
-        assert 1 <= c && c <= 8 && 1 <= r && r <= 8;
-        return _config[8 - r][c - 1];
+        assert 1 <= c && c <= _size && 1 <= r && r <= _size;
+        return _config[r - 1][c - 1];
     }
 
     /** Return the contents of the square SQ.  SQ must be the
      *  standard printed designation of a square (having the form cr,
-     *  where c is a letter from a-h and r is a digit from 1-8). */
+     *  where c is a letter and r is a digit. */
     Piece get(String sq) {
         return get(col(sq), row(sq));
     }
 
-    /** Return the column number (a value in the range 1-8) for SQ.
+    /** Return the column number (a value in the range 1-_size) for SQ.
      *  SQ is as for {@link get(String)}. */
     static int col(String sq) {
         return sq.charAt(0) - CONVFACTOR;
     }
 
-    /** Return the row number (a value in the range 1-8) for SQ.
+    /** Return the row number (a value in the range 1-_size) for SQ.
      *  SQ is as for {@link get(String)}. */
     static int row(String sq) {
         return Integer.parseInt(sq.substring(1));
@@ -85,13 +70,7 @@ class Board {
     boolean isLegal(Move move) {
         if (move == null) {
             return false;
-        } else if (get(move.getCol0(), move.getRow0()).side() != turn()) {
-            return false;
-        } else if (isBlocked(move)) {
-            return false;
-        }  else if (get(move.getCol1(), move.getRow1()).side() == turn()) {
-            return false;
-        } else if (move.length() != moveSpaces(move)) {
+        } else if (isFree(move)) {
             return false;
         }
         return true;
@@ -100,129 +79,28 @@ class Board {
     /** Return a list of all legal moves. */
     LinkedList<Move> legalMoves() {
         LinkedList<Move> movelist = new LinkedList<Move>();
-        for (int x = 1; x < 9; x++) {
-            for (int y = 1; y < 9; y++) {
-                for (int i = 1; i < 9; i++) {
-                    for (int j = 1; j < 9; j++) {
-                        Move m = Move.create(x, y, i, j);
-                        if (isLegal(m)) {
-                            movelist.add(m);
-                        }
-                    }
-                }
-            }
+        for (int x = 1; x < _size; x++) {
+            for (int y = 1; y < _size; y++) {
+		Move m = Move.create(x, y);
+		if (isLegal(m)) {
+		    movelist.add(m);
+		}
+	    }
         }
         return movelist;
     }
 
-    /** Returns the number of steps move M can go in move's direction. */
-    int moveSpaces(Move m) {
+    /** Returns true if the move M is on a spot not yet searched. */
+    boolean isFree(Move m) {
         int x = m.getCol0();
         int y = m.getRow0();
-        Direction d = m.direction();
-        int spaces = 0;
-        switch (d) {
-        case UP:
-        case DOWN:
-            for (int i = 1; i < 9; i++) {
-                if (get(x, i).side() != null) {
-                    spaces++;
-                }
-            }
-            break;
-        case RIGHT:
-        case LEFT:
-            for (int j = 1; j < 9; j++) {
-                if (get(j, y).side() != null) {
-                    spaces++;
-                }
-            }
-            break;
-        case UPRIGHT:
-        case DOWNLEFT:
-            int x1 = x - Math.min(x, y) + 1;
-            int y1 = y - Math.min(x, y) + 1;
-            while (x1 < 9 && y1 < 9) {
-                if (get(x1, y1).side() != null) {
-                    spaces++;
-                }
-                x1++;
-                y1++;
-            }
-            break;
-        case UPLEFT:
-        case DOWNRIGHT:
-            int x2 = x;
-            int y2 = y;
-            while (x2 < 8 && y2 > 1) {
-                x2++;
-                y2--;
-            }
-            while (x2 >= 1 && y2 <= 8) {
-                if (get(x2, y2).side() != null) {
-                    spaces++;
-                }
-                x2--;
-                y2++;
-            }
-            break;
-        default:
-            break;
-        }
-        return spaces;
-    }
-
-    /** Returns true if there is an opponent piece in M's path. */
-    boolean isBlocked(Move m) {
-        int x = m.getCol0();
-        int y = m.getRow0();
-        Direction d = m.direction();
-        int len = m.length();
-        while (len > 1) {
-            switch (d) {
-            case UP:
-                y++;
-                break;
-            case DOWN:
-                y--;
-                break;
-            case RIGHT:
-                x++;
-                break;
-            case LEFT:
-                x--;
-                break;
-            case UPRIGHT:
-                x++;
-                y++;
-                break;
-            case DOWNLEFT:
-                x--;
-                y--;
-                break;
-            case UPLEFT:
-                x--;
-                y++;
-                break;
-            case DOWNRIGHT:
-                x++;
-                y--;
-                break;
-            default:
-                break;
-            }
-            if (get(x, y).side() == turn().opponent()) {
-                return true;
-            }
-            len--;
-        }
-        return false;
+        return get(x, y).marker() == EMP;
     }
 
     /** Return true iff the game is currently over.  A game is over if
-     *  either player has all his pieces continguous. */
+     *  either player has all his ships found. */
     boolean gameOver() {
-        return piecesContiguous(BLACK) || piecesContiguous(WHITE);
+        return shipsFound(BLACK) || shipsFound(WHITE);
     }
 
     /** Return true iff PLAYER's pieces are continguous. */
@@ -422,13 +300,14 @@ class Board {
 
     /** Assuming isLegal(MOVE), make MOVE. */
     void makeMove(Move move) {
-        System.out.println("Not allowed");
-    }
-
-    /** Retract (unmake) one move, returning to the state immediately before
-     *  that move.  Requires that movesMade () > 0. */
-    void retract() {
-        System.out.println("Not allowed");
+        if (isLegal(move)) {
+            incrMoves(1);
+            addMove(move);
+            setBoard(move);
+            turnDone();
+        } else {
+            System.out.println("Invalid Move");
+        }
     }
 
     /** Passes the turn onto the next player. */

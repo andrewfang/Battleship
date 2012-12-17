@@ -1,12 +1,15 @@
 package battleship;
 
-/** Indicates a marker that is used to tell if the move
- *  actually hits something.
+/** Indicates a side.
  *  @author Andrew Fang */
+enum Side {
+    /** The names of the two sides. */
+    PLAYER1, PLAYER2;
 
-enum Marker {
-    /** The names of the possibilities. */
-    HIT, MISS;
+    /** Return the opposing color. */
+    Side opponent() {
+        return this == PLAYER1 ? PLAYER2 : PLAYER1;
+    }
 
     @Override
     public String toString() {
