@@ -1,0 +1,1 @@
+Battleship======A Java Project for a text-rendered game of Battleship. Allows for 0-2 human players, and fills in necessary players with artificial intelligence computer players.
