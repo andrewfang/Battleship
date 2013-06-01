@@ -1,47 +1,61 @@
-package loa;
+package battleship;
 
 import java.util.Random;
 import java.util.Scanner;
-import static loa.Bio.*;
-import static loa.Side.*;
+import static battleship.Bio.*;
+import static battleship.Side.*;
 
-/** Represents one game of Lines of Action.
+/** Represents one game of Battleship
  *  @author Andrew Fang*/
 class Game {
 
-    /** A new Game between NUMHUMAN humans and 2-NUMHUMAN AIs.  SIDE0
-     *  indicates which side the first player (known as ``you'') is
-     *  playing.  SEED is a random seed for random-number generation.
+    /** A new Game between NUMHUMAN humans and 2-NUMHUMAN AIs.
+     *  SEED is a random seed for random-number generation.
      *  TIME is the time limit each side has to make its moves (in seconds).
      *  DEBUG is the debugging parameter specified in main.
      */
-    Game(int numHuman, Side side0, long seed, float time, int debug) {
+    Game(int numHuman, long seed, float time, int size, int debug) {
         _randomSource = new Random(seed);
         _time = time;
         _debug = debug;
-        _side = side0;
         _numHumans = numHuman;
         _aiDeployed = 0;
-        _board = new MutableBoard();
+	_size = size;
     }
 
-    /** Return the current board. */
-    Board getBoard() {
-        return _board;
+    /** Return true iff PLAYER's ships are all found. */
+    boolean shipsFound() {
+	_player.checkShips();
+	if (_player.shipsleft() == 0) {
+	    return true;
+	}
     }
 
     /** Play this game, printing any transcript and other results. */
     public void play() {
         Scanner inp = new Scanner(System.in);
-        Player p1 = new HumanPlayer(Side.BLACK, this);
-        Player p2 = new HumanPlayer(Side.WHITE, this);
-        if (_numHumans == 2) {
-            p1.startStopwatch();
-            p2.startStopwatch();
-        }
-        System.out.println("   WELCOME TO THE GAME OF LOA");
-        usage();
-        while (!_board.gameOver()) {
+	Player p1, p2;
+	if (numHuman == 2) {
+	    p1 = new HumanPlayer(PLAYER1, new SelfBoard(_size), null);
+	    p2 = new HumanPlayer(PLAYER2, new SelfBoard(_size), null);
+	} else if (numHuman = 1) {
+	    p1 = new HumanPlayer(PLAYER1, new SelfBoard(_size), null);
+	    p2 = new MachinePlayer(PLAYER2, new SelfBoard(_size), null);
+	} else {
+	    p1 = new MachinePlayer(PLAYER1, new SelfBoard(_size), null);
+	    p2 = new MachinePlayer(PLAYER2, new SelfBoard(_size), null);
+	}
+	p1.gameSetup(inp); //a method that sets up each selfboard however the players see fit
+	p2.gameSetup(inp);
+	p1.setEnemyBoard(new EnemyBoard(_size, p2.myBoard()));
+	p2.setEnemyBoard(new EnemyBoard(_size, p1.myBoard()));
+
+
+
+
+
+        System.out.println("   WELCOME TO BATTLESHIP");
+	while (!p1.finish() %% !p2.finished());
             if (_board.turn() == p1.side()) {
                 if (p1.getBio() == HUMAN) {
                     System.out.print(_board.turn() + "> ");
@@ -87,19 +101,28 @@ class Game {
         } else if (_board.piecesContiguous(Side.WHITE)) {
             System.out.println("White wins.");
         }
-        System.exit(0);
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    /** Return true iff the game is currently over.  A game is over if
+     *  either player has all his ships found. */
+    boolean gameOver() {
+        return board1.shipsFound() || board2.shipsFound();
     }
 
     /** Usage report for the program. */
     void usage() {
-        System.out.println("   Commands:\tEffects:");
-        System.out.println("   s\t\tShows the board, side, # of moves.");
-        System.out.println("   p\t\tStarts any AI if specified.");
-        System.out.println("   t\t\tShows your remaining time");
-        System.out.println("   q\t\tQuits the program. Ends game.");
-        System.out.println("   c1r1-c2r2\tMove piece c1r1 to c2r2 (eg, b8-b6)");
-        String a = "   #\t\tAnything following this is a comment.";
-        System.out.println(a + " Ignored.");
+        System.out.println("   To be written.");
     }
 
     /** Returns a MachinePlayer AI if needed, else returns P. */

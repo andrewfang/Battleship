@@ -1,7 +1,8 @@
 package battleship;
 
-import static battleship.Side.*;
-import static battleship.Ship.*;
+import static battleship.Shipname.*;
+import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.Scanner;
 import ucb.util.Stopwatch;
 
@@ -11,31 +12,57 @@ import ucb.util.Stopwatch;
 public abstract class Player {
 
     /** A player that plays the SIDE pieces in GAME. */
-    Player(Side side, Game game) {
+    Player(Side side, SelfBoard self, EnemyBoard opponent) {
         _side = side;
-        _game = game;
+	_myBoard = self;
+	_enemyBoard = opponent;
         _stopwatch = new Stopwatch();
         _stopwatchOn = false;
-	_ships
+	_ships = new LinkedList<Ship>();
+	_ships.add(new Ship(CARRIER));
+	_ships.add(new Ship(BATTLESHIP));
+	_ships.add(new Ship(SUBMARINE));
+	_ships.add(new Ship(DESTROYER));
+	_ships.add(new Ship(PATROL));
     }
 
-    /** Makes a decision about what to do using INP.
-     *  Returns true iff we want to instantiate an AI.*/
-    abstract boolean decide(Scanner inp);
+    /** Sets up a game based on the given INP. */
+    abstract void gameSetup(Scanner inp);
+
+    /** Checks to see if all ships are destroyed. */
+    void checkShips() {
+	Iterator iter = _ships.iterator();
+	while (iter.hasNext()) {
+	    Ship next = (Ship) iter.next();
+	    if (next.destroyed()) {
+		iter.remove();
+	    }
+	}
+    }
+
+    /** Returns the number of ships left. */
+    int shipsleft() {
+	return _ships.size();
+    }
+
+    /** Returns whether player has been finished. */
+    boolean finished() {
+	return _ships.size() == 0;
+    }
+
+    /** Sets the enemy board to E. */
+    void setEnemyBoard(EnemyBoard e) {
+	_enemyBoard = e;
+    }
+
+    /** Returns myboard. */
+    SelfBoard myBoard() {
+	return _myBoard;
+    }
 
     /** Return which side I'm playing. */
     Side side() {
         return _side;
-    }
-
-    /** Return the board I am using. */
-    Board getBoard() {
-        return _game.getBoard();
-    }
-
-    /** Return the game I am playing. */
-    Game getGame() {
-        return _game;
     }
 
     /** Return the biology of the player. */
@@ -72,7 +99,10 @@ public abstract class Player {
     private Bio _biology;
     /** This player's side. */
     private final Side _side;
-    /** The game this player is part of. */
-    private Game _game;
-
+    /** The ships this player has. */
+    private LinkedList<Ship> _ships;
+    /** The opponent's board. */
+    private EnemyBoard _enemyBoard;
+    /** My board. */
+    private SelfBoard _myBoard;
 }

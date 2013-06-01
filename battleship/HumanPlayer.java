@@ -15,6 +15,14 @@ class HumanPlayer extends Player {
         setBio(HUMAN);
     }
 
+    @Override void gameSetup(Scanner inp) {
+	String placement = "";
+	Sysetm.out.println("Where would you like to put your Battleship(5)?");
+	placement = inp.next();
+	Coordniate
+	myBoard().place(new Ship(BATTLESHIP), 
+	    
+
     @Override boolean decide(Scanner inp) {
         boolean done = false;
         String command;
